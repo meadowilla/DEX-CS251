@@ -661,12 +661,14 @@ function calculateMaxMinExchangeRate(maxSlippagePct){
 /*** ADD LIQUIDITY ***/
 async function addLiquidity(amountEth, maxSlippagePct) {
   const {maxExchangeRate, minExchangeRate} = calculateMaxMinExchangeRate(maxSlippagePct);
+  console.log(ethers.utils.parseUnits(amountEth));
   await exchange_contract.connect(provider.getSigner(defaultAccount)).addLiquidity(maxExchangeRate, minExchangeRate, { value: ethers.utils.parseUnits(amountEth)});
 }
 
 /*** REMOVE LIQUIDITY ***/
 async function removeLiquidity(amountEth, maxSlippagePct) {
   const {maxExchangeRate, minExchangeRate} = calculateMaxMinExchangeRate(maxSlippagePct);
+  console.log(ethers.utils.parseUnits(amountEth));
   await exchange_contract.connect(provider.getSigner(defaultAccount)).removeLiquidity(ethers.utils.parseUnits(amountEth), maxExchangeRate, minExchangeRate); 
 }
 
@@ -689,6 +691,7 @@ async function swapETHForTokens(amountEth, maxSlippagePct) {
   console.log("Hi2");
   const maxExchangeRate = (Number(maxSlippagePct) * exchange_rate_multiplier) / 100;
   console.log("Hi there", maxExchangeRate);
+  console.log(ethers.utils.parseUnits(amountEth));
   await exchange_contract.connect(provider.getSigner(defaultAccount)).swapETHForTokens(maxExchangeRate, {value: ethers.utils.parseUnits(amountEth)});
   console.log("Bye2");
 }

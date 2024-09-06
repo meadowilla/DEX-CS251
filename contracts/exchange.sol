@@ -68,7 +68,7 @@ contract TokenExchange is Ownable {
 
         token.transferFrom(msg.sender, address(this), amountTokens);
         token_reserves = token.balanceOf(address(this));
-        eth_reserves = msg.value / 10**18;
+        eth_reserves = msg.value;
         k = token_reserves * eth_reserves;
 
         // Pool shares set to a large value to minimize round-off errors
@@ -93,7 +93,7 @@ contract TokenExchange is Ownable {
 
     // Function getReserves
     function getReserves() public view returns (uint, uint) {
-        return (eth_reserves * 10**18, token_reserves);
+        return (eth_reserves, token_reserves);
     }
 
     // ============================================================
@@ -116,13 +116,13 @@ contract TokenExchange is Ownable {
         console.log("Min_exchange_rate: ", min_exchange_rate);
 
         // check the actual exchange rate
-        uint actual_exchange_rate = (token_reserves * multiplier) / eth_reserves; 
+        uint actual_exchange_rate = (token_reserves * multiplier) / (eth_reserves/10**18); 
         console.log("actual_exchange_rate: ", actual_exchange_rate);
         require(actual_exchange_rate <= max_exchange_rate, "The exchange rate should be <= max_change_rate");
         require(actual_exchange_rate >= min_exchange_rate, "The exchange rate should be >= min_change_rate");
 
         // add liquidity
-        uint amountTokens = ((token_reserves * msg.value) / eth_reserves) / 10**18;
+        uint amountTokens = (token_reserves * msg.value) / eth_reserves;
         console.log("msgValue: ", msg.value);
         console.log("amountTokens: ", amountTokens);
         require(amountTokens <= tokenSupply, "Not have enough tokens to add liquidity");
@@ -132,7 +132,7 @@ contract TokenExchange is Ownable {
         uint token_reserves_old = token_reserves;
         token_reserves = token.balanceOf(address(this));
         console.log("Address.balance: ", address(this).balance);
-        eth_reserves = address(this).balance / 10**18; // whether is = address(this).balance or += msg.value
+        eth_reserves = address(this).balance; // whether is = address(this).balance or += msg.value
         k = token_reserves * eth_reserves;
 
         // add new lp_provider
@@ -172,7 +172,7 @@ contract TokenExchange is Ownable {
         console.log("amountTokensReward: ", amountTokensReward);
         
         // check the exchange rate and calculate the corresponding tokens
-        uint actual_exchange_rate = (token_reserves * multiplier) / eth_reserves; // consider this exchange rate again
+        uint actual_exchange_rate = (token_reserves * multiplier) / (eth_reserves/10**18); // consider this exchange rate again
         console.log("Actual_exchange_rate: ", actual_exchange_rate);
         require(actual_exchange_rate <= max_exchange_rate, "Actual_exchange_rate should be <= max_exchange_rate"); 
         require(actual_exchange_rate >= min_exchange_rate, "Actual_exchange_rate should be >= min_exchange_rate");
@@ -186,7 +186,7 @@ contract TokenExchange is Ownable {
         // update token_reserves, eth_reserves and k
         uint token_reserves_old = token_reserves;
         token_reserves = token.balanceOf(address(this));
-        eth_reserves = address(this).balance / 10**18;
+        eth_reserves = address(this).balance;
         k = token_reserves * eth_reserves;
 
         // update total_share and lp's shares
@@ -215,7 +215,7 @@ contract TokenExchange is Ownable {
         payable
     {
         uint total_shares_old = total_shares;
-        uint amountETH = (lps[msg.sender] * eth_reserves * 10**18) / total_shares_old;
+        uint amountETH = (lps[msg.sender] * eth_reserves) / total_shares_old;
         removeLiquidity(amountETH, max_exchange_rate, min_exchange_rate);    
     }
     /***  Define additional functions for liquidity fees here as needed ***/
@@ -239,7 +239,7 @@ contract TokenExchange is Ownable {
         console.log("Swap ", amountTokensForSwap, "tokens");
 
         // swap
-        uint actual_exchange_rate = eth_reserves * multiplier / (token_reserves + amountTokensForSwap);
+        uint actual_exchange_rate = (eth_reserves/10**18) * multiplier / (token_reserves + amountTokensForSwap);
         console.log("with eth/token rate: ", actual_exchange_rate);
         if (multiplier > actual_exchange_rate){
             require(multiplier - actual_exchange_rate <= max_exchange_rate, 
@@ -247,7 +247,7 @@ contract TokenExchange is Ownable {
         }
         uint amountETH = (amountTokensForSwap * actual_exchange_rate * 10**18) / multiplier;
         console.log("receive ", amountETH, "wei");
-        require(eth_reserves - (amountETH / 10**18) >= 1, "Cannot swap all eth");
+        require((eth_reserves - amountETH) / 10**18 >= 1, "Cannot swap all eth");
         console.log("msg.sender is ", msg.sender);
         console.log("contract is ", address(this));
         payable(msg.sender).transfer(amountETH);
@@ -266,7 +266,7 @@ contract TokenExchange is Ownable {
         // token_reserves = token.balanceOf(address(this)) - token_fee_reserves;
         // eth_reserves = (address(this).balance - eth_fee_reserves) / 10**18;
         token_reserves = token.balanceOf(address(this));
-        eth_reserves = address(this).balance / 10**18;
+        eth_reserves = address(this).balance;
 
         console.log("token_fee_reserves: ", token_fee_reserves);
         console.log("eth_fee_reserves: ", eth_fee_reserves);
@@ -295,7 +295,7 @@ contract TokenExchange is Ownable {
         console.log("Swap ", amountETH, "wei");
         
         // swap
-        uint actual_exchange_rate = (token_reserves * multiplier) / (eth_reserves + (amountETH / 10**18));
+        uint actual_exchange_rate = (token_reserves * multiplier * 10**18) / (eth_reserves + amountETH);
         console.log("with token/eth rate: ", actual_exchange_rate);
         if (multiplier > actual_exchange_rate){
             require(multiplier - actual_exchange_rate <= max_exchange_rate, 
@@ -319,7 +319,7 @@ contract TokenExchange is Ownable {
         // token_reserves = token.balanceOf(address(this)) - token_fee_reserves;
         // eth_reserves = (address(this).balance - eth_fee_reserves) / 10**18;
         token_reserves = token.balanceOf(address(this));
-        eth_reserves = address(this).balance / 10**18;
+        eth_reserves = address(this).balance;
 
         console.log("token_fee_reserves: ", token_fee_reserves);
         console.log("eth_fee_reserves: ", eth_fee_reserves);
