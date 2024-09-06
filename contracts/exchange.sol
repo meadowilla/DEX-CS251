@@ -93,7 +93,7 @@ contract TokenExchange is Ownable {
 
     // Function getReserves
     function getReserves() public view returns (uint, uint) {
-        return (eth_reserves, token_reserves);
+        return (eth_reserves * 10**18, token_reserves);
     }
 
     // ============================================================
@@ -248,8 +248,13 @@ contract TokenExchange is Ownable {
         uint amountETH = (amountTokensForSwap * actual_exchange_rate * 10**18) / multiplier;
         console.log("receive ", amountETH, "wei");
         require(eth_reserves - (amountETH / 10**18) >= 1, "Cannot swap all eth");
+        console.log("msg.sender is ", msg.sender);
+        console.log("contract is ", address(this));
         payable(msg.sender).transfer(amountETH);
+        console.log("#tokens of msg.sender: ", token.balanceOf(msg.sender));
+        console.log("#tokens of contract before swap: ", token.balanceOf(address(this)));
         token.transferFrom(msg.sender, address(this), amountTokens);
+        console.log("#tokens of contract after swap: ", token.balanceOf(address(this)));
 
         // distribute token rewards for lps and update token_fee_reserves
         for (uint i=0; i<lp_providers.length; i++){
@@ -258,8 +263,10 @@ contract TokenExchange is Ownable {
         }
 
         // update token & eth reserves
-        token_reserves = token.balanceOf(address(this)) - token_fee_reserves;
-        eth_reserves = (address(this).balance - eth_fee_reserves) / 10**18;
+        // token_reserves = token.balanceOf(address(this)) - token_fee_reserves;
+        // eth_reserves = (address(this).balance - eth_fee_reserves) / 10**18;
+        token_reserves = token.balanceOf(address(this));
+        eth_reserves = address(this).balance / 10**18;
 
         console.log("token_fee_reserves: ", token_fee_reserves);
         console.log("eth_fee_reserves: ", eth_fee_reserves);
@@ -298,6 +305,9 @@ contract TokenExchange is Ownable {
         console.log("receive ", amountTokens, " tokens");
         require(token_reserves - amountTokens >= 1, "Cannot swap all tokens");
         token.transfer(msg.sender, amountTokens);
+        // token.approve(msg.sender, amountTokens);
+        console.log("msg.sender is ", msg.sender);
+        console.log("#tokens of msg.sender = ", token.balanceOf(msg.sender));
 
         // distribute eth rewards for lps and update eth_fee_reserves
         for (uint i=0; i<lp_providers.length; i++){
@@ -306,8 +316,10 @@ contract TokenExchange is Ownable {
         }
 
         // update token & eth reserves
-        token_reserves = token.balanceOf(address(this)) - token_fee_reserves;
-        eth_reserves = (address(this).balance - eth_fee_reserves) / 10**18;
+        // token_reserves = token.balanceOf(address(this)) - token_fee_reserves;
+        // eth_reserves = (address(this).balance - eth_fee_reserves) / 10**18;
+        token_reserves = token.balanceOf(address(this));
+        eth_reserves = address(this).balance / 10**18;
 
         console.log("token_fee_reserves: ", token_fee_reserves);
         console.log("eth_fee_reserves: ", eth_fee_reserves);

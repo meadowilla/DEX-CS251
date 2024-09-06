@@ -635,7 +635,7 @@ async function getPoolState() {
     let accounts = await provider.listAccounts()
     let poolReserves = await exchange_contract.connect(provider.getSigner(accounts[0])).getReserves();
     // Convert WEI to ETH for UI
-    let liquidity_eth = Number(poolReserves[0]);
+    let liquidity_eth = Number(ethers.utils.formatEther(poolReserves[0]));
     let liquidity_tokens = Number(poolReserves[1]);
     print
     return {
@@ -790,7 +790,7 @@ function check(name, swap_rate, condition) {
 	}
 }
 
-/*
+// /*
 const sanityCheck = async function() {
   var swap_fee = await exchange_contract.connect(provider.getSigner(defaultAccount)).getSwapFee();
   console.log("Beginning Sanity Check.");
@@ -870,17 +870,19 @@ const sanityCheck = async function() {
       await swapETHForTokens("100", "5");
       var state1 = await getPoolState();
       console.log(state1);
-      var expected_tokens_received = 100 * (1 - swap_fee) * start_state.token_eth_rate;
-      console.log(state2);
+      var expected_tokens_received = 100 * (1 - swap_fee) * start_state.token_eth_rate; // 97 tokens
       var user_tokens1 = await token_contract.connect(provider.getSigner(defaultAccount)).balanceOf(defaultAccount);
       score += check("Testing simple exchange of ETH to token", swap_fee[0], 
         Math.abs((start_state.token_liquidity - expected_tokens_received) - state1.token_liquidity) < 5 &&
         (state1.eth_liquidity - start_state.eth_liquidity) === 100 &&
         Math.abs(Number(start_tokens) + expected_tokens_received - Number(user_tokens1)) < 5);
+
+      await token_contract.connect(provider.getSigner(defaultAccount)).approve(exchange_address, 90);
       
       await swapTokensForETH("90", "5");
       var state2 = await getPoolState();
-      var expected_eth_received = 90 * (1 - swap_fee) * state1.eth_token_rate;
+      console.log(state2);
+      var expected_eth_received = 90 * (1 - swap_fee) * state1.eth_token_rate;//87.3 eth
       var user_tokens2 = await token_contract.connect(provider.getSigner(defaultAccount)).balanceOf(defaultAccount);
       score += check("Test simple exchange of token to ETH", swap_fee[0], 
         state2.token_liquidity === (state1.token_liquidity + 90) && 
@@ -903,8 +905,8 @@ const sanityCheck = async function() {
 
       // accumulate some lp rewards
       for (var i = 0; i < 20; i++) {
-        await swapETHForTokens("100", "5");
-        await swapTokensForETH("100", "5");
+        await swapETHForTokens("100", "10");
+        await swapTokensForETH("100", "10");
       }
 
       var state4 = await getPoolState();
@@ -940,4 +942,4 @@ const sanityCheck = async function() {
 setTimeout(function () {
   sanityCheck();
 }, 10000);
-*/
+// */
